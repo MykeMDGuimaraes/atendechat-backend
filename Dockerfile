@@ -1,32 +1,43 @@
-# Etapa 1 - Build da aplicação
+# ------------------------------
+# 1️⃣ STAGE: BUILD (COMPILAÇÃO)
+# ------------------------------
 FROM node:18-alpine AS builder
 
-# Diretório de trabalho
+# Criar diretório do app
 WORKDIR /app
 
-# Copiar package.json e instalar dependências
+# Instalar dependências necessárias para pacotes Git
+RUN apk add --no-cache git
+
+# Copiar arquivos de dependências
 COPY package*.json ./
+
+# Instalar dependências (sem dev)
 RUN npm install
 
-# Copiar todo o código
+# Copiar o restante do código
 COPY . .
 
-# Compilar TypeScript (se houver build)
-RUN npm run build || echo "Sem build - talvez projeto seja JS puro"
+# Compilar TypeScript (se existir)
+RUN if [ -f "tsconfig.json" ]; then npm run build; fi
 
-# Etapa 2 - Imagem final (mais leve)
+
+# ------------------------------
+# 2️⃣ STAGE: RUNTIME (EXECUÇÃO)
+# ------------------------------
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Copiar app da imagem anterior
-COPY --from=builder /app /app
-
-# Garantir apenas dependências de produção
+# Copiar somente o necessário do build
+COPY --from=builder /app/package*.json ./
 RUN npm install --omit=dev
 
-# Expôr a porta (confirme se o app usa 3000)
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/public ./public
+
+# Expõe a porta (altere se precisar)
 EXPOSE 3000
 
-# Comando inicial
+# Comando para iniciar o servidor
 CMD ["npm", "start"]
