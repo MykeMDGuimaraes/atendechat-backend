@@ -13,13 +13,13 @@ RUN apk add --no-cache git
 COPY package*.json ./
 
 # Instalar dependências (sem dev)
-RUN npm install
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 # Copiar o restante do código
 COPY . .
 
-# Compilar TypeScript (se existir)
-RUN if [ -f "tsconfig.json" ]; then npm run build; fi
+# Compilar TypeScript
+RUN npm run build
 
 
 # ------------------------------
@@ -31,7 +31,7 @@ WORKDIR /app
 
 # Copiar somente o necessário do build
 COPY --from=builder /app/package*.json ./
-RUN npm install --omit=dev
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public
