@@ -5,7 +5,7 @@ import { getIO } from "../libs/socket";
 import AuthUserService from "../services/UserServices/AuthUserService";
 import { SendRefreshToken } from "../helpers/SendRefreshToken";
 import { RefreshTokenService } from "../services/AuthServices/RefreshTokenService";
-import FindUserFromToken from "../services/AuthServices/FindUserFromToken";
+import ShowUserService from "../services/UserServices/ShowUserService";
 import User from "../models/User";
 
 export const store = async (req: Request, res: Response): Promise<Response> => {
@@ -56,13 +56,14 @@ export const update = async (
 };
 
 export const me = async (req: Request, res: Response): Promise<Response> => {
-  const token: string = req.cookies.jrt;
-  const user = await FindUserFromToken(token);
-  const { id, profile, super: superAdmin } = user;
+  const { id: userId } = req.user || {};
 
-  if (!token) {
+  if (!userId) {
     throw new AppError("ERR_SESSION_EXPIRED", 401);
   }
+
+  const user = await ShowUserService(userId);
+  const { id, profile, super: superAdmin } = user;
 
   return res.json({ id, profile, super: superAdmin });
 };
