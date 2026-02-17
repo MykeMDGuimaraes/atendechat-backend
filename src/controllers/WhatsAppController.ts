@@ -70,6 +70,8 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
   }: WhatsappData = req.body;
   const { companyId } = req.user;
 
+  const resolvedProvider = provider || (token ? "evolution" : undefined);
+
   const { whatsapp, oldDefaultWhatsapp } = await CreateWhatsAppService({
     name,
     status,
@@ -81,7 +83,7 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     queueIds,
     companyId,
     token,
-    provider,
+    provider: resolvedProvider,
     //timeSendQueue,
     //sendIdQueue,
 	  transferQueueId,
@@ -132,8 +134,13 @@ export const update = async (
   const whatsappData = req.body;
   const { companyId } = req.user;
 
+  const resolvedWhatsappData = {
+    ...whatsappData,
+    provider: whatsappData.provider || (whatsappData.token ? "evolution" : undefined)
+  };
+
   const { whatsapp, oldDefaultWhatsapp } = await UpdateWhatsAppService({
-    whatsappData,
+    whatsappData: resolvedWhatsappData,
     whatsappId,
     companyId
   });
