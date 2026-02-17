@@ -1,5 +1,5 @@
 import ListWhatsAppsService from "../WhatsappService/ListWhatsAppsService";
-import { StartWhatsAppSession } from "./StartWhatsAppSession";
+import { isBaileysProvider, StartWhatsAppSession } from "./StartWhatsAppSession";
 import * as Sentry from "@sentry/node";
 
 export const StartAllWhatsAppsSessions = async (
@@ -8,9 +8,11 @@ export const StartAllWhatsAppsSessions = async (
   try {
     const whatsapps = await ListWhatsAppsService({ companyId });
     if (whatsapps.length > 0) {
-      whatsapps.forEach(whatsapp => {
-        StartWhatsAppSession(whatsapp, companyId);
-      });
+      whatsapps
+        .filter(whatsapp => isBaileysProvider(whatsapp.provider))
+        .forEach(whatsapp => {
+          StartWhatsAppSession(whatsapp, companyId);
+        });
     }
   } catch (e) {
     Sentry.captureException(e);

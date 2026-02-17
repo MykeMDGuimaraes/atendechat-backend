@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { getIO } from "../libs/socket";
 import { removeWbot } from "../libs/wbot";
-import { StartWhatsAppSession } from "../services/WbotServices/StartWhatsAppSession";
+import { isBaileysProvider, StartWhatsAppSession } from "../services/WbotServices/StartWhatsAppSession";
 
 import CreateWhatsAppService from "../services/WhatsappService/CreateWhatsAppService";
 import DeleteWhatsAppService from "../services/WhatsappService/DeleteWhatsAppService";
@@ -17,6 +17,7 @@ interface WhatsappData {
   complationMessage?: string;
   outOfHoursMessage?: string;
   ratingMessage?: string;
+  provider?: string;
   status?: string;
   isDefault?: boolean;
   token?: string;
@@ -52,6 +53,8 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     greetingMessage,
     complationMessage,
     outOfHoursMessage,
+    ratingMessage,
+    provider,
     queueIds,
     token,
     //timeSendQueue,
@@ -74,9 +77,11 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     greetingMessage,
     complationMessage,
     outOfHoursMessage,
+    ratingMessage,
     queueIds,
     companyId,
     token,
+    provider,
     //timeSendQueue,
     //sendIdQueue,
 	  transferQueueId,
@@ -89,7 +94,9 @@ export const store = async (req: Request, res: Response): Promise<Response> => {
     integrationId
   });
 
-  StartWhatsAppSession(whatsapp, companyId);
+  if (isBaileysProvider(whatsapp.provider)) {
+    StartWhatsAppSession(whatsapp, companyId);
+  }
 
   const io = getIO();
   io.to(`company-${companyId}-mainchannel`).emit(`company-${companyId}-whatsapp`, {
