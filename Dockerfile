@@ -1,7 +1,7 @@
 # ------------------------------
 # 1️⃣ STAGE: BUILD (COMPILAÇÃO)
 # ------------------------------
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Criar diretório do app
 WORKDIR /app
@@ -25,7 +25,7 @@ RUN npm run build
 # ------------------------------
 # 2️⃣ STAGE: RUNTIME (EXECUÇÃO)
 # ------------------------------
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
