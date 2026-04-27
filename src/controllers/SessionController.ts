@@ -3,7 +3,10 @@ import AppError from "../errors/AppError";
 import { getIO } from "../libs/socket";
 
 import AuthUserService from "../services/UserServices/AuthUserService";
-import { SendRefreshToken } from "../helpers/SendRefreshToken";
+import {
+  SendRefreshToken,
+  refreshTokenCookieOptions
+} from "../helpers/SendRefreshToken";
 import { RefreshTokenService } from "../services/AuthServices/RefreshTokenService";
 import ShowUserService from "../services/UserServices/ShowUserService";
 import User from "../models/User";
@@ -76,7 +79,7 @@ export const remove = async (
   const user = await User.findByPk(id);
   await user.update({ online: false });
 
-  res.clearCookie("jrt");
+  res.clearCookie("jrt", refreshTokenCookieOptions());
 
   return res.send();
 };
