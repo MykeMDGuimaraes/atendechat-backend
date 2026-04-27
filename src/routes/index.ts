@@ -34,7 +34,13 @@ import forgotsRoutes from "./forgotPasswordRoutes";
 import flowDefaultRoutes from "./flowDefaultRoutes";
 import flowBuilder from "./flowBuilderRoutes";
 import flowCampaignRoutes from "./flowCampaignRoutes";
+import healthRoutes from "./healthRoutes";
 const routes = Router();
+
+// Health endpoints first, no auth, no body parsing dependencies.
+// Used by Traefik/EasyPanel liveness, autoheal post-checks, and external
+// uptime monitors. /health is cheap; /health/db hits Postgres.
+routes.use(healthRoutes);
 
 routes.use(userRoutes);
 routes.use("/auth", authRoutes);
@@ -42,7 +48,6 @@ routes.use(settingRoutes);
 routes.use(contactRoutes);
 routes.use(ticketRoutes);
 routes.use(whatsappRoutes);
-routes.use(messageRoutes);
 routes.use(messageRoutes);
 routes.use(whatsappSessionRoutes);
 routes.use(queueRoutes);

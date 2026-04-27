@@ -72,17 +72,17 @@ e expõe o socket a qualquer origem.
 
 ## P1 — Estabilidade & UX
 
-### [P1] Endpoint `/health` para liveness/readiness
+### ~~[P1] Endpoint `/health` para liveness/readiness~~ ✅ DONE
 
-**Onde:** `src/routes/index.ts` (ou novo `healthRoutes.ts`)
+**Onde:** `src/routes/healthRoutes.ts` (novo) + registro em `src/routes/index.ts`
 
-Hoje não existe. EasyPanel/Docker e monitoramento externo precisam.
-
-**Aceite:**
-- [ ] `GET /health` retorna `200 { ok: true, version: <pkg.version> }`
-- [ ] (Bonus) `GET /health/db` valida conexão Sequelize antes de
-      responder
-- [ ] Documentar endpoints
+**Entregue:**
+- [x] `GET /health` retorna `200 { ok, service, version, env, uptime_s, timestamp }`
+- [x] `GET /health/db` valida `SELECT 1` no Sequelize, retorna 200 se up,
+      503 se down, com `latency_ms` em ambos casos
+- [x] Documentado neste backlog
+- [x] Comentário no `routes/index.ts` explicando posição (antes das
+      outras rotas, sem auth)
 
 ---
 
@@ -132,21 +132,16 @@ a porta por minutos. Liveness probe falha durante esse tempo.
 
 ---
 
-### [P1] Remover `routes.use(messageRoutes)` duplicado
+### ~~[P1] Remover `routes.use(messageRoutes)` duplicado~~ ✅ DONE
 
-**Onde:** `src/routes/index.ts:46-47`
+**Onde:** `src/routes/index.ts`
 
-```ts
-routes.use(messageRoutes);
-routes.use(messageRoutes);   // ← duplicado
-```
+Linha duplicada removida no mesmo PR do `/health`.
 
-Cada request em rotas de message passa por todos os handlers duas
-vezes. Pequeno custo de CPU + risco de side-effects.
-
-**Aceite:**
-- [ ] Linha 47 removida
-- [ ] Smoke test: GET /messages e POST /messages continuam funcionando
+**Entregue:**
+- [x] Linha duplicada removida
+- [ ] Smoke test pós-deploy: GET /messages, POST /messages continuam
+      respondendo (verificar após o próximo build)
 
 ---
 
