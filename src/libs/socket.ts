@@ -11,10 +11,28 @@ import { CounterManager } from "./counter";
 
 let io: SocketIO;
 
+const buildAllowedOrigins = (): string[] => {
+  const list: string[] = [];
+  if (process.env.FRONTEND_URL) {
+    list.push(process.env.FRONTEND_URL);
+  }
+  if (process.env.FRONTEND_URLS) {
+    list.push(
+      ...process.env.FRONTEND_URLS.split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    );
+  }
+  return Array.from(new Set(list));
+};
+
+const allowedOrigins = buildAllowedOrigins();
+
 export const initIO = (httpServer: Server): SocketIO => {
   io = new SocketIO(httpServer, {
     cors: {
-      origin: "*",
+      // Spec-compliant: never use "*" together with credentials.
+      origin: allowedOrigins.length > 0 ? allowedOrigins : false,
       credentials: true,
       methods: ["GET", "POST", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
@@ -22,6 +40,17 @@ export const initIO = (httpServer: Server): SocketIO => {
     allowEIO3: true,
     transports: ['websocket', 'polling']
   });
+
+  if (allowedOrigins.length === 0) {
+    logger.warn(
+      "[socket.ts] No FRONTEND_URL or FRONTEND_URLS configured. Socket.IO " +
+        "will reject all CORS handshakes. Set FRONTEND_URL in your environment."
+    );
+  } else {
+    logger.info(
+      `[socket.ts] Socket.IO CORS allowed origins: ${allowedOrigins.join(", ")}`
+    );
+  }
 
   io.on("connection", async socket => {
     logger.info("Client Connected");
