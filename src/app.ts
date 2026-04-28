@@ -18,6 +18,14 @@ Sentry.init({ dsn: process.env.SENTRY_DSN });
 
 const app = express();
 
+// Behind a reverse proxy (Traefik on EasyPanel). Trust the immediate
+// upstream so that rate limiters see the client IP from X-Forwarded-For
+// rather than the proxy's loopback address. Setting `1` (and not `true`)
+// avoids spoofing risk: clients can set their own X-Forwarded-For, but
+// Express will use the LAST value, which Traefik overwrites with the
+// real socket peer.
+app.set("trust proxy", 1);
+
 app.set("queues", {
   messageQueue,
   sendScheduledMessages
