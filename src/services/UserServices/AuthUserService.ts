@@ -1,3 +1,5 @@
+import { compare } from "bcryptjs";
+
 import User from "../../models/User";
 import AppError from "../../errors/AppError";
 import {
@@ -29,6 +31,18 @@ interface Response {
   refreshToken: string;
 }
 
+/**
+ * Constant-cost dummy bcrypt hash used to equalize response time when the
+ * user doesn't exist. Without this, the response is noticeably faster on
+ * unknown e-mails (because we skip checkPassword), making timing-based
+ * enumeration possible.
+ *
+ * This hash never matches anything; the compare always returns false.
+ * Generated once with: bcrypt.hash("__never_matches__", 8).
+ */
+const DUMMY_BCRYPT_HASH =
+  "$2a$08$hHoFb3DHMr.2vK/8h9oVz.0PQ0DBb.KrfWplc8tKJX8LJ4LNkbN8e";
+
 const AuthUserService = async ({
   email,
   password
@@ -39,7 +53,10 @@ const AuthUserService = async ({
   });
 
   if (!user) {
-    throw new AppError("ERR_USER_DONT_EXISTS", 401);
+    // Burn the same time we'd burn on a real password check so that
+    // timing-based enumeration ("did the e-mail exist?") fails too.
+    await compare(password, DUMMY_BCRYPT_HASH);
+    throw new AppError("ERR_INVALID_CREDENTIALS", 401);
   }
 
   if (!(await user.checkPassword(password))) {
